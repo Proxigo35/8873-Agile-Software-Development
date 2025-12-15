@@ -15,6 +15,16 @@ public class AccountTest {
 		account = new Account("Test Account", new BigDecimal("1000"));
 	}
 
+	@ParameterizedTest
+	@ValueSource(strings = {"-1000", "-1"})
+	public void testAccountConstructor(String amount) {
+		BigDecimal bdAmount = new BigDecimal(amount);
+		assertThrows(
+			IllegalArgumentException.class,
+			() -> new Account("Test", bdAmount)
+		);
+	}
+
 	@Test
 	public void testGetAccountHolder() {
 		assertEquals("Test Account", account.getAccountHolder());
@@ -31,46 +41,94 @@ public class AccountTest {
 	}
 
 	@ParameterizedTest
-	@ValueSource(strings = {"10", "500", "1000"})
-	public void testDeposit(BigDecimal amount) {
-		account.deposit(amount);
-		assertEquals(new BigDecimal("1000").add(amount), account.getBalance());
+	@ValueSource(strings = {"10", "1000"})
+	public void testDeposit(String amount) {
+		BigDecimal bdAmount = new BigDecimal(amount);
+		assertTrue(account.deposit(bdAmount));
+		assertEquals(new BigDecimal("1000").add(bdAmount), account.getBalance());
 	}
 
 	@ParameterizedTest
-	@ValueSource(strings = {"-1000", "-1", "0"})
-	public void testDepositIllegalArguments(BigDecimal amount) {
+	@ValueSource(strings = {"-100", "-1", "0"})
+	public void testDepositInvalidAmount(String amount) {
+		BigDecimal bdAmount = new BigDecimal(amount);
 		assertThrows(
 			IllegalArgumentException.class,
-			() -> account.deposit(amount)
+			() -> account.deposit(bdAmount)
 		);
 		assertEquals(new BigDecimal("1000"), account.getBalance());
 	}
-	
-	@ParameterizedTest
-	@ValueSource(strings = {"-1000", "-10", "0", "10", "1000"})
-	public void testWithdraw(BigDecimal amount) {
-		if (account.withdraw(amount)) assertEquals(new BigDecimal("1000").subtract(amount), account.getBalance());
-		else assertEquals(BigDecimal.ZERO, account.getBalance());
-	}
-
 
 	@ParameterizedTest
-	@ValueSource(strings = {"-1000", "-10", "0", "10", "1000"})
-	public void testApproveLoan(BigDecimal amount) {
-		try {
-			account.approveLoan(amount);
-			assertEquals(amount, account.getLoan());
-		} catch(IllegalArgumentException e) {
-			assertEquals(BigDecimal.ZERO, account.getLoan());
-		}
+	@ValueSource(strings = {"10", "1000"})
+	public void testWithdraw(String amount) {
+		BigDecimal bdAmount = new BigDecimal(amount);
+		assertTrue(account.withdraw(bdAmount));
+		assertEquals(new BigDecimal("1000").subtract(bdAmount), account.getBalance());
 	}
 
 	@ParameterizedTest
-	@ValueSource(strings = {"-1000", "0", "1000"})
-	public void testRepayLoan(BigDecimal amount) {
-		account.approveLoan(new BigDecimal("2000"));
-		if (account.repayLoan(amount)) assertEquals(new BigDecimal("2000").subtract(amount), account.getLoan());
-		else assertEquals(new BigDecimal("2000"), account.getLoan());
+	@ValueSource(strings = {"-100", "-1", "0"})
+	public void testWithdrawInvalidAmount(String amount) {
+		BigDecimal bdAmount = new BigDecimal(amount);
+		assertThrows(
+			IllegalArgumentException.class,
+			() -> account.withdraw(bdAmount)
+		);
+		assertEquals(new BigDecimal("1000"), account.getBalance());
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {"1001", "2000"})
+	public void testWithdrawInsufficientFunds(String amount) {
+		assertFalse(account.withdraw(new BigDecimal(amount)));
+		assertEquals(new BigDecimal("1000"), account.getBalance());
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {"100", "1000"})
+	public void testApproveLoan(String amount) {
+		BigDecimal bdAmount = new BigDecimal(amount);
+		assertTrue(account.approveLoan(bdAmount));
+		assertEquals(bdAmount, account.getLoan());
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {"-100", "-1", "0"})
+	public void testApproveLoanInvalidAmount(String amount) {
+		assertThrows(
+			IllegalArgumentException.class,
+			() -> account.approveLoan(new BigDecimal(amount))
+		);
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {"10", "1000"})
+	public void testRepayLoan(String amount) {
+		BigDecimal bdAmount = new BigDecimal(amount);
+		account.approveLoan(new BigDecimal("1000"));
+		assertTrue(account.repayLoan(bdAmount));
+		assertEquals(new BigDecimal("1000").subtract(bdAmount), account.getLoan());
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {"-100", "-1", "0"})
+	public void testRepayLoanInvalidAmount(String amount) {
+		BigDecimal bdAmount = new BigDecimal(amount);
+		account.approveLoan(new BigDecimal("1000"));
+		assertThrows(
+			IllegalArgumentException.class,
+			() -> account.repayLoan(bdAmount)
+		);
+		assertEquals(new BigDecimal("1000"), account.getLoan());
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {"1001", "2000"})
+	public void testRepayLoanExceedingLoan(String amount) {
+		BigDecimal bdAmount = new BigDecimal(amount);
+		account.approveLoan(new BigDecimal("1000"));
+		assertFalse(account.repayLoan(new BigDecimal(amount)));
+		assertEquals(new BigDecimal("1000"), account.getLoan());
 	}
 }
