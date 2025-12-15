@@ -26,10 +26,10 @@ public class BankingApp {
 
 		// Test withdrawals
 		System.out.println("Withdrawing 300 from Bob: " + bank.withdraw("Bob", 300)); // Should return true
-		System.out.println("Bob's balance: " + bank.getBalance("Bob")); // Should be 200
+			System.out.println("Bob's balance: " + bank.getBalance("Bob")); // Should be 200
 
 		// Test loan approval
-		System.out.println("Approving a loan of 400 for Alice: " + bank.approveLoan("Alice", 400)); // Should return true
+			System.out.println("Approving a loan of 400 for Alice: " + bank.approveLoan("Alice", 400)); // Should return true
 		System.out.println("Alice's loan: " + bank.getLoan("Alice")); // Should be 400
 
 		// Test loan repayment

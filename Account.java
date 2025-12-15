@@ -1,14 +1,18 @@
+import java.math.BigDecimal;
+
 // Represents a single bank account with account holder name, balance, and loan amount
 public class Account {
 	private String accountHolder; // Name of the account holder
-	private double balance;       // Current account balance
-	private double loan;          // Outstanding loan amount
+	private BigDecimal balance;       // Current account balance
+	private BigDecimal loan;          // Outstanding loan amount
 
 	// Constructor to create a new account
-	protected Account(String accountHolder, double balance) {
+	protected Account(String accountHolder, BigDecimal balance) {
+		if (balance.compareTo(BigDecimal.ZERO) < 0) throw new IllegalArgumentException("Initial balance cannot be negative.");
+		
 		this.accountHolder = accountHolder;
 		this.balance = balance;
-		this.loan = 0;
+		this.loan = BigDecimal.ZERO;
 	}
 
 	// Getter for the account holder's name
@@ -17,36 +21,38 @@ public class Account {
 	}
 
 	// Getter for the account balance
-	protected double getBalance() {
+	protected BigDecimal getBalance() {
 		return balance;
 	}
 
 	// Getter for the loan amount
-	protected double getLoan() {
+	protected BigDecimal getLoan() {
 		return loan;
 	}
 
 	// Method to deposit money into the account
-	protected void deposit(double amount) {
-		balance += amount;
+	protected void deposit(BigDecimal amount) {
+		if (amount.compareTo(BigDecimal.ZERO) <= 0) throw new IllegalArgumentException("Deposit amount must be greater than 0.");
+		balance = balance.add(amount);
 	}
 
 	// Method to withdraw money from the account (only if balance is sufficient)
-	protected boolean withdraw(double amount) {
-		if (amount > balance) return false; // Insufficient funds
-		balance -= amount;
+	protected boolean withdraw(BigDecimal amount) {
+		if (amount.compareTo(balance) > 1) return false; // Insufficient funds
+		balance = balance.subtract(amount);
 		return true;
 	}
 
 	// Method to approve a loan for the account
-	protected void approveLoan(double amount) {
-		loan += amount;
+	protected void approveLoan(BigDecimal amount) {
+		if (amount.compareTo(BigDecimal.ZERO) < 1) throw new IllegalArgumentException("Loan amount must be greater than 0.");
+		loan = loan.add(amount);
 	}
 
 	// Method to repay a part of the loan (only if amount <= loan)
-	protected boolean repayLoan(double amount) {
-		if (amount > loan) return false; // Repayment exceeds loan
-		loan -= amount;
+	protected boolean repayLoan(BigDecimal amount) {
+		if (amount.compareTo(loan) >= 0) return false; // Repayment exceeds loan
+		loan = loan.subtract(amount);
 		return true;
 	}
 }

@@ -1,60 +1,76 @@
+import java.math.BigDecimal;
+
+import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
 
 public class AccountTest {
 
-	Account account = new Account("Bob", 1000);
+	private Account account;
+
+	@BeforeEach
+	void setUp() {
+		account = new Account("Test Account", new BigDecimal("1000"));
+	}
 
 	@Test
 	public void testGetAccountHolder() {
-		assertEquals("Bob", account.getAccountHolder());
+		assertEquals("Test Account", account.getAccountHolder());
 	}
 
 	@Test
 	public void testGetBalance() {
-		assertEquals(1000, account.getBalance());
+		assertEquals(new BigDecimal("1000"), account.getBalance());
 	}
 
 	@Test
 	public void testGetLoan() {
-		assertEquals(0, account.getLoan());
+		assertEquals(BigDecimal.ZERO, account.getLoan());
 	}
 
-	// Need to properly handle negative numbers and the account overflowing by refactoring code
 	@ParameterizedTest
-	@ValueSource(doubles = {-500, 0, 500, Double.MAX_VALUE, Double.MAX_VALUE})
-	public void testDeposit(double depositAmount) {
-		double balanceBefore = account.getBalance();
-		account.deposit(depositAmount);
-		assertEquals(balanceBefore + depositAmount, account.getBalance());
+	@ValueSource(strings = {"10", "500", "1000"})
+	public void testDeposit(BigDecimal amount) {
+		account.deposit(amount);
+		assertEquals(new BigDecimal("1000").add(amount), account.getBalance());
 	}
 
-	// Need to properly handle negative numbers by refactoring code
 	@ParameterizedTest
-	@ValueSource(doubles = {-500, 0, 500, Double.MAX_VALUE, Double.MAX_VALUE})
-	public void testWithdraw(double withdrawAmount) {
-		double balanceBefore = account.getBalance();
-		if (account.withdraw(withdrawAmount)) {
-			assertEquals(balanceBefore - withdrawAmount, account.getBalance());
+	@ValueSource(strings = {"-1000", "-1", "0"})
+	public void testDepositIllegalArguments(BigDecimal amount) {
+		assertThrows(
+			IllegalArgumentException.class,
+			() -> account.deposit(amount)
+		);
+		assertEquals(new BigDecimal("1000"), account.getBalance());
+	}
+	
+	@ParameterizedTest
+	@ValueSource(strings = {"-1000", "-10", "0", "10", "1000"})
+	public void testWithdraw(BigDecimal amount) {
+		if (account.withdraw(amount)) assertEquals(new BigDecimal("1000").subtract(amount), account.getBalance());
+		else assertEquals(BigDecimal.ZERO, account.getBalance());
+	}
+
+
+	@ParameterizedTest
+	@ValueSource(strings = {"-1000", "-10", "0", "10", "1000"})
+	public void testApproveLoan(BigDecimal amount) {
+		try {
+			account.approveLoan(amount);
+			assertEquals(amount, account.getLoan());
+		} catch(IllegalArgumentException e) {
+			assertEquals(BigDecimal.ZERO, account.getLoan());
 		}
 	}
 
-	@Test
-	public void testApproveLoan() {
-		account.approveLoan(1000);
-		assertEquals(1000, account.getLoan());
-	}
-
-	// Need to properly handle negative numbers by refactoring code
 	@ParameterizedTest
-	@ValueSource(doubles = {-500, 0, 500, Double.MAX_VALUE, Double.MAX_VALUE})
-	public void testRepayLoan(double repayAmount) {
-		double loanBefore = account.getLoan();
-		if (account.repayLoan(repayAmount)) {
-			assertEquals(loanBefore - repayAmount, account.getLoan());
-		}
+	@ValueSource(strings = {"-1000", "0", "1000"})
+	public void testRepayLoan(BigDecimal amount) {
+		account.approveLoan(new BigDecimal("2000"));
+		if (account.repayLoan(amount)) assertEquals(new BigDecimal("2000").subtract(amount), account.getLoan());
+		else assertEquals(new BigDecimal("2000"), account.getLoan());
 	}
 }
