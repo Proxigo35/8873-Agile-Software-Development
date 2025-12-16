@@ -1,23 +1,36 @@
 import java.math.BigDecimal;
-
 import static org.junit.jupiter.api.Assertions.*;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.junit.jupiter.api.BeforeEach;
 
 public class AccountTest {
 
 	private Account account;
 
+	@BeforeAll
+	public static void beforeAll() {
+		System.out.println("Starting Account tests.");
+	}
+	
+	@AfterAll
+	public static void afterAll() {
+		System.out.println("Finished Account tests.");
+	}
+
 	@BeforeEach
-	void setUp() {
+	public void setUp() {
 		account = new Account("Test Account", new BigDecimal("1000"));
 	}
 
+	@AfterEach
+    public void tearDown() {
+        account = null;
+    }
+
 	@ParameterizedTest
 	@ValueSource(strings = {"-1000", "-1"})
-	public void testAccountConstructor(String amount) {
+	public void testAccountConstructorInvalid(String amount) {
 		BigDecimal bdAmount = new BigDecimal(amount);
 		assertThrows(
 			IllegalArgumentException.class,
@@ -26,7 +39,7 @@ public class AccountTest {
 	}
 
 	@Test
-	public void testGetAccountHolder() {
+	public void testGetAccountHolderValid() {
 		assertEquals("Test Account", account.getAccountHolder());
 	}
 
@@ -42,7 +55,7 @@ public class AccountTest {
 
 	@ParameterizedTest
 	@ValueSource(strings = {"10", "1000"})
-	public void testDeposit(String amount) {
+	public void testDepositValid(String amount) {
 		BigDecimal bdAmount = new BigDecimal(amount);
 		assertTrue(account.deposit(bdAmount));
 		assertEquals(new BigDecimal("1000").add(bdAmount), account.getBalance());
@@ -61,7 +74,7 @@ public class AccountTest {
 
 	@ParameterizedTest
 	@ValueSource(strings = {"10", "1000"})
-	public void testWithdraw(String amount) {
+	public void testWithdrawValid(String amount) {
 		BigDecimal bdAmount = new BigDecimal(amount);
 		assertTrue(account.withdraw(bdAmount));
 		assertEquals(new BigDecimal("1000").subtract(bdAmount), account.getBalance());
@@ -87,7 +100,7 @@ public class AccountTest {
 
 	@ParameterizedTest
 	@ValueSource(strings = {"100", "1000"})
-	public void testApproveLoan(String amount) {
+	public void testApproveLoanValid(String amount) {
 		BigDecimal bdAmount = new BigDecimal(amount);
 		assertTrue(account.approveLoan(bdAmount));
 		assertEquals(bdAmount, account.getLoan());
@@ -104,7 +117,7 @@ public class AccountTest {
 
 	@ParameterizedTest
 	@ValueSource(strings = {"10", "1000"})
-	public void testRepayLoan(String amount) {
+	public void testRepayLoanValid(String amount) {
 		BigDecimal bdAmount = new BigDecimal(amount);
 		account.approveLoan(new BigDecimal("1000"));
 		assertTrue(account.repayLoan(bdAmount));
